@@ -665,7 +665,7 @@ function renderSalesReceiverState(){
     $("#salesReceiverHint").innerHTML=`<i class="receiver-dot"></i> Приём активен · ${usdt(balance)} · курс ${getDailyRate().toFixed(2)} · 10–60 сек.`;
     $("#salesReceiverHint").classList.add("on");
   }else if(balance<10){
-    $("#salesReceiverHint").textContent="Требуется баланс от 10 USDT";
+    $("#salesReceiverHint").textContent="";
     $("#salesReceiverHint").classList.remove("on");
   }else if(active===0){
     $("#salesReceiverHint").textContent="Активируйте карту для приёма платежей";
