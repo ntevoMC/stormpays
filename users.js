@@ -21,23 +21,20 @@ window.STROMPAYS_USERS = [
     }
   }
 
-  // Пример пользователя:
-  // ,
-  // {
-  //   id: "usr_001",
-  //   name: "Demo User",
-  //   email: "user@example.com",
-  //   password: "user123",
-  //   role: "user",
-  //   active: true,
-  //   created: "11.09.2026",
-  //   lastLogin: "—",
-  //   balance: 10,
-  //   settings: {
-  //     incomingCurrency: "UAH",
-  //     outgoingCurrency: "UAH",
-  //     commissionIn: 5,
-  //     commissionOut: 2
-  //   }
-  // }
-];
+  {
+  "id": "usr_1789108728992",
+  "name": "sword",
+  "email": "sword@gmail.com",
+  "password": "sword",
+  "role": "user",
+  "active": true,
+  "created": "11.09.2026",
+  "lastLogin": "—",
+  "balance": 20,
+  "settings": {
+    "incomingCurrency": "UAH",
+    "outgoingCurrency": "UAH",
+    "commissionIn": 5,
+    "commissionOut": 2
+  }
+}
