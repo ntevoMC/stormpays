@@ -21,6 +21,7 @@ window.STROMPAYS_USERS = [
     }
   }
 
+  ,
   {
   "id": "usr_1789108728992",
   "name": "sword",
@@ -37,4 +38,4 @@ window.STROMPAYS_USERS = [
     "commissionIn": 5,
     "commissionOut": 2
   }
-}
+};
