@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0a0b11">
+  <title>StromPays — Client Cabinet Demo</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="toastRoot" class="toast-root"></div>
+
+  <!-- LOGIN -->
+  <section id="loginView" class="login-view">
+    <div class="login-visual">
+      <div class="grid-glow"></div>
+      <div class="login-brand">
+        <div class="brand-symbol">
+          <svg class="strom-logo-svg" viewBox="0 0 32 32" aria-hidden="true">
+            <path class="strom-bolt" d="M18.7 3.5 8.8 17h6.1L12.7 28.5 23.2 14.7h-6.4L18.7 3.5Z"></path>
+          </svg>
+        </div>
+        <div>
+          <strong>StromPays</strong>
+          <span>payment workspace</span>
+        </div>
+      </div>
+
+      <div class="login-copy">
+        <div class="micro">PRIVATE PAYMENT WORKSPACE</div>
+        <h1>Один кабинет.<br><em>Весь поток под контролем.</em></h1>
+        <p>Клиентская панель для управления реквизитами, заявками, балансом, аналитикой и деловой перепиской.</p>
+      </div>
+
+      <div class="visual-orbit orbit-a"></div>
+      <div class="visual-orbit orbit-b"></div>
+    </div>
+
+    <div class="login-panel">
+      <div class="login-box">
+        <div class="login-chip">STROMPAYS ACCESS</div>
+        <h2>Вход в кабинет</h2>
+        <p>Используйте email и пароль, выданные администратором.</p>
+
+        <form id="loginForm">
+          <label>
+            <span>Email</span>
+            <input id="loginEmail" type="email" autocomplete="username" placeholder="name@example.com" required>
+          </label>
+          <label>
+            <span>Пароль</span>
+            <div class="password-field">
+              <input id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••••" required>
+              <button type="button" id="togglePassword">Показать</button>
+            </div>
+          </label>
+          <button class="btn primary full" type="submit">Войти</button>
+        </form>
+
+        <div class="admin-hint">
+          <b>Администратор демо</b>
+          <span>admin@strompays.local</span>
+          <span>admin123</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- APP -->
+  <div id="appView" class="app hidden">
+    <aside id="sidebar" class="sidebar">
+      <div>
+        <div class="brand">
+          <div class="brand-symbol small">
+          <svg class="strom-logo-svg" viewBox="0 0 32 32" aria-hidden="true">
+            <path class="strom-bolt" d="M18.7 3.5 8.8 17h6.1L12.7 28.5 23.2 14.7h-6.4L18.7 3.5Z"></path>
+          </svg>
+        </div>
+          <div>
+            <strong>StromPays</strong>
+            <span>workspace</span>
+          </div>
+        </div>
+<nav id="mainNav">
+          <button class="nav-item active" data-page="home"><span>◫</span>Главная</button>
+          <button class="nav-item" data-page="sales"><span>↓</span>Продажи</button>
+          <button class="nav-item" data-page="buy"><span>↑</span>Купля</button>
+          <button class="nav-item" data-page="cards"><span>▤</span>Карты и кошельки</button>
+          <button class="nav-item" data-page="balance"><span>◇</span>Баланс</button>
+          <button class="nav-item" data-page="analytics"><span>⌁</span>Аналитика</button>
+          <button class="nav-item" data-page="messages"><span>✉</span>История переписки</button>
+          <button class="nav-item" data-page="disputes"><span>!</span>Диспуты</button>
+          <button class="nav-item" data-page="settings"><span>⚙</span>Настройки</button>
+          <button class="nav-item admin-only hidden" data-page="users"><span>◎</span>Пользователи</button>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="top-left">
+          <button id="menuBtn" class="menu-btn">☰</button>
+          <div>
+            <span class="crumb">STROMPAYS / <b id="crumb">HOME</b></span>
+            <h1 id="pageTitle">Главная</h1>
+          </div>
+        </div>
+        <div class="top-right">
+          <div class="header-balance">
+            <span>USDT баланс</span>
+            <b id="headerBalance">0.00 USDT</b>
+          </div>
+
+          <div class="notifications-menu" id="notificationsMenu">
+            <button id="notificationsTrigger" class="icon-btn notification-trigger" type="button" aria-label="Уведомления" aria-expanded="false">
+              <svg class="bell-svg" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z"></path>
+                <path d="M10 21h4"></path>
+              </svg>
+              <span id="notificationsBadge" class="notification-badge hidden">0</span>
+            </button>
+
+            <div id="notificationsDropdown" class="notifications-dropdown">
+              <div class="notifications-head">
+                <div>
+                  <b>Уведомления</b>
+                  <span id="notificationsSubtitle">Нет новых уведомлений</span>
+                </div>
+                <button id="markNotificationsRead" type="button">Прочитать все</button>
+              </div>
+              <div id="notificationsList" class="notifications-list"></div>
+            </div>
+          </div>
+
+          <button id="themeBtn" class="icon-btn">◐</button>
+          <div class="account-menu" id="accountMenu">
+            <button class="header-user account-trigger" id="accountTrigger" type="button" aria-haspopup="true" aria-expanded="false">
+              <div class="avatar" id="headerAvatar">SP</div>
+              <div class="header-user-copy">
+                <b id="headerName">—</b>
+                <span id="headerEmail">—</span>
+              </div>
+              <span class="account-chevron">⌄</span>
+            </button>
+
+            <div class="account-dropdown" id="accountDropdown">
+              <div class="account-dropdown-head">
+                <div class="avatar large" id="dropdownAvatar">SP</div>
+                <div>
+                  <b id="dropdownName">—</b>
+                  <span id="dropdownEmail">—</span>
+                </div>
+              </div>
+
+              <button id="returnAdminBtn" class="account-action hidden" type="button">
+                <span>↩</span>
+                Вернуться в админку
+              </button>
+
+              <button id="logoutBtn" class="account-action danger-action" type="button">
+                <span>⇥</span>
+                Выйти
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="content">
+
+        <!-- HOME -->
+        <section id="homePage" class="page">
+          <div class="home-hero">
+            <div>
+              <span class="kicker">ACCOUNT OVERVIEW</span>
+              <h2>Добро пожаловать, <b id="welcomeName">пользователь</b></h2>
+              <p>Новый кабинет StromPays. Все показатели начинаются с нуля.</p>
+            </div>
+            <button class="btn secondary" data-go="balance">Открыть баланс</button>
+          </div>
+
+          <div class="metric-grid">
+            <article class="metric accent">
+              <span>Текущий баланс</span>
+              <strong id="homeBalance">0.00 USDT</strong>
+              <small>доступно</small>
+            </article>
+            <article class="metric">
+              <span>Прибыль сегодня</span>
+              <strong id="profitToday">0.00 UAH</strong>
+              <small>после комиссий</small>
+            </article>
+            <article class="metric">
+              <span>PayIn сегодня</span>
+              <strong id="payInToday">0.00 UAH</strong>
+              <small>входящие</small>
+            </article>
+            <article class="metric">
+              <span>PayOut сегодня</span>
+              <strong id="payOutToday">0.00 UAH</strong>
+              <small>исходящие</small>
+            </article>
+          </div>
+
+          <div class="home-grid">
+            <article class="panel chart-card">
+              <div class="panel-head">
+                <div><h3>Прибыль за 30 дней</h3><p>UAH · ежедневная динамика</p></div>
+                <span class="zero-pill">0.00 UAH</span>
+              </div>
+              <div id="profitChart" class="profit-chart"></div>
+            </article>
+
+            <article class="panel status-card">
+              <div class="panel-head"><div><h3>Статус кабинета</h3><p>Текущее состояние</p></div></div>
+              <div class="status-list">
+                <div><span>Активных реквизитов</span><b id="statusCards">0</b></div>
+                <div><span>Открытых заявок</span><b id="statusOrders">0</b></div>
+                <div><span>Диспутов</span><b id="statusDisputes">0</b></div>
+                <div><span>Уведомлений</span><b id="statusMessages">0</b></div>
+                <div><span>Курс на сегодня</span><b id="statusDailyRate">0.00</b></div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <!-- CARDS -->
+        <section id="cardsPage" class="page hidden">
+          <div class="page-head">
+            <div><span class="kicker">PAYMENT METHODS</span><h2>Карты и кошельки</h2><p>Реквизиты для входящих и исходящих операций.</p></div>
+          </div>
+          <div class="section-actions compact-actions">
+            <button id="addCardBtn" class="btn primary">+ Добавить реквизиты</button>
+          </div>
+
+          <div class="mini-metrics">
+            <div><span>Всего</span><b id="cardsCount">0</b></div>
+            <div><span>Активных</span><b id="activeCardsCount">0</b></div>
+            <div><span>Общий пробег</span><b id="cardsMileage">0 UAH</b></div>
+          </div>
+
+          <article class="panel">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Банк</th><th>Имя</th><th>Номер карты</th><th>Телефон</th><th>Пробег</th><th>Активна</th><th>Действие</th></tr></thead>
+                <tbody id="cardsBody"></tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+
+        <!-- SETTINGS -->
+        <section id="settingsPage" class="page hidden">
+          <div class="page-head">
+            <div><span class="kicker">ACCOUNT SETTINGS</span><h2>Настройки</h2><p>Параметры кабинета назначаются платформой и недоступны для изменения пользователем.</p></div>
+            <div class="locked-badge">🔒 Только просмотр</div>
+          </div>
+
+          <div class="readonly-settings">
+            <article class="readonly-setting">
+              <span>Базовая валюта для входящих платежей</span>
+              <strong id="incomingCurrencyView">UAH</strong>
+            </article>
+            <article class="readonly-setting">
+              <span>Базовая валюта для исходящих платежей</span>
+              <strong id="outgoingCurrencyView">UAH</strong>
+            </article>
+            <article class="readonly-setting">
+              <span>Комиссия трейдера за входящие фиатные платежи</span>
+              <strong id="commissionInView">5%</strong>
+            </article>
+            <article class="readonly-setting">
+              <span>Комиссия трейдера за исходящие фиатные платежи</span>
+              <strong id="commissionOutView">2%</strong>
+            </article>
+          </div>
+        </section>
+
+        <!-- ANALYTICS -->
+        <section id="analyticsPage" class="page hidden">
+          <div class="page-head">
+            <div><span class="kicker">REPORTING</span><h2>Аналитика</h2><p>Расчёт показателей за выбранный период.</p></div>
+          </div>
+
+          <article class="panel report-card">
+            <div class="date-row">
+              <label><span>Дата от</span><input id="analyticsFrom" type="date"></label>
+              <label><span>Дата до</span><input id="analyticsTo" type="date"></label>
+            </div>
+            <div class="button-row analytics-actions">
+              <button id="balanceReportBtn" class="btn secondary">Балансовый отчёт</button>
+              <button id="calculateAnalyticsBtn" class="btn primary">Рассчитать</button>
+            </div>
+          </article>
+
+          <div id="analyticsMetrics" class="metric-grid analytics-metrics">
+            <article class="metric"><span>PayIn</span><strong id="anPayIn">0.00 UAH</strong><small>период</small></article>
+            <article class="metric"><span>PayOut</span><strong id="anPayOut">0.00 UAH</strong><small>период</small></article>
+            <article class="metric"><span>Прибыль</span><strong id="anProfit">0.00 UAH</strong><small>комиссии</small></article>
+            <article class="metric"><span>Завершено</span><strong id="anDone">0</strong><small>операций</small></article>
+          </div>
+        </section>
+
+        <!-- SALES -->
+        <section id="salesPage" class="page hidden">
+          <div class="page-head">
+            <div><span class="kicker">PAYIN ORDERS</span><h2>Продажи</h2><p>Входящие заявки. Статусы назначаются системой.</p></div>
+
+          </div>
+          <div class="trade-shell">
+            <div class="trade-tools">
+              <label><span>Дата</span><input id="salesDate" type="date"></label>
+              <div id="salesReceiverHint" class="receiver-hint">Приём заявок выключен</div>
+              <label class="switch-row receiving-switch">
+                <span class="switch-control"><input id="salesReceiving" type="checkbox"><i></i></span>
+                <span>В ходе выполнения</span>
+              </label>
+            </div>
+          </div>
+          <div class="tabs tabs-right" data-type="sales">
+            <button class="tab active" data-filter="">Все</button><button class="tab" data-filter="new">Новые</button><button class="tab" data-filter="checking">Проверка</button><button class="tab" data-filter="done">Завершённые</button><button class="tab" data-filter="dispute">Спор</button><button class="tab" data-filter="cancelled">Отменённые</button>
+          </div>
+          <article class="panel"><div class="table-wrap"><table>
+            <thead><tr><th>ID</th><th>Дата и время</th><th>Статус</th><th>Вх сумма</th><th>Вх валюта</th><th>Курс / мой курс</th><th>Банк</th><th>Действие</th></tr></thead>
+            <tbody id="salesBody"></tbody>
+          </table></div></article>
+        </section>
+
+        <!-- BUY -->
+        <section id="buyPage" class="page hidden">
+          <div class="page-head">
+            <div><span class="kicker">PAYOUT ORDERS</span><h2>Купля</h2><p>Исходящие заявки. Статусы назначаются системой.</p></div>
+
+          </div>
+          <div class="trade-shell">
+            <div class="trade-tools">
+              <label><span>Дата</span><input id="buyDate" type="date"></label>
+              <label class="switch-row push-right">
+                <span class="switch-control"><input id="buyOnlyActive" type="checkbox"><i></i></span>
+                <span>В ходе выполнения</span>
+              </label>
+            </div>
+          </div>
+          <div class="tabs tabs-right" data-type="buy">
+            <button class="tab active" data-filter="">Все</button><button class="tab" data-filter="new">Новые</button><button class="tab" data-filter="checking">Проверка</button><button class="tab" data-filter="done">Завершённые</button><button class="tab" data-filter="dispute">Спор</button><button class="tab" data-filter="cancelled">Отменённые</button>
+          </div>
+          <article class="panel"><div class="table-wrap"><table>
+            <thead><tr><th>ID</th><th>Дата и время</th><th>Статус</th><th>Сумма</th><th>Валюта</th><th>Курс / мой курс</th><th>Банк</th><th></th></tr></thead>
+            <tbody id="buyBody"></tbody>
+          </table></div></article>
+        </section>
+
+        <!-- BALANCE -->
+        <section id="balancePage" class="page hidden">
+          <div class="page-head">
+            <div><span class="kicker">USDT WALLET</span><h2>Баланс</h2><p>Пополнения и история депозитов.</p></div>
+          </div>
+          <div class="section-actions balance-actions">
+            <button id="depositBtn" class="btn primary">+ Создать запрос на пополнение</button>
+          </div>
+
+          <div class="balance-hero">
+            <div>
+              <span>Текущий баланс</span>
+              <strong id="balancePageValue">0.00 USDT</strong>
+              <small>TRC20 demo wallet</small>
+              <div class="balance-lock-line">Блокировка при: <b>10 USDT</b> <em id="balanceAccessState">Заблокировано</em></div>
+            </div>
+            <div class="wallet-address"><span>Кошелёк для пополнения</span><code>TRStromPaysDemoWallet000000000000</code><small>Сеть TRC20</small></div>
+          </div>
+
+          <article class="panel">
+            <div class="panel-head"><div><h3>Запросы на пополнение</h3><p>История USDT депозитов</p></div></div>
+            <div class="table-wrap"><table>
+              <thead><tr><th>ID</th><th>Дата</th><th>Сеть</th><th>Сумма</th><th>Комиссия</th><th>Статус</th></tr></thead>
+              <tbody id="depositsBody"></tbody>
+            </table></div>
+          </article>
+        </section>
+
+        <!-- MESSAGES -->
+        <section id="messagesPage" class="page hidden">
+          <div class="page-head">
+            <div>
+              <span class="kicker">MESSAGE ARCHIVE</span>
+              <h2>История переписки</h2>
+              <p>Раздел сохранён в меню, но системные события сюда больше не записываются.</p>
+            </div>
+          </div>
+
+          <article class="panel messages-empty-panel">
+            <div class="messages-empty-icon">✉</div>
+            <b>История переписки пуста</b>
+            <span>Все новые события отображаются через уведомления в правом верхнем углу.</span>
+          </article>
+        </section>
+
+        <!-- DISPUTES -->
+        <section id="disputesPage" class="page hidden">
+          <div class="page-head">
+            <div><span class="kicker">DISPUTE CENTER</span><h2>Диспуты</h2><p>Спорные операции по выбранной дате.</p></div>
+          </div>
+          <article class="panel dispute-search">
+            <label><span>Дата расчёта</span><input id="disputeDate" type="date"></label>
+            <button id="calculateDisputesBtn" class="btn primary">Рассчитать</button>
+          </article>
+          <article class="panel empty-card mt">
+            <div class="empty-icon">✓</div>
+            <b id="disputeEmptyTitle">Открытых диспутов нет</b>
+            <span id="disputeEmptyText">Здесь появятся спорные заявки пользователя.</span>
+          </article>
+        </section>
+
+        <!-- USERS / ADMIN -->
+        <section id="usersPage" class="page hidden">
+          <div class="page-head">
+            <div><span class="kicker">ADMIN CONTROL</span><h2>Пользователи</h2><p>Создание логинов и доступ к клиентским кабинетам.</p></div>
+            <button id="addUserBtn" class="btn primary">+ Новый пользователь</button>
+          </div>
+
+          <div class="admin-stats">
+            <div><span>Всего пользователей</span><b id="adminUsersCount">0</b></div>
+            <div><span>Активных</span><b id="adminActiveCount">0</b></div>
+            <div><span>Заблокировано</span><b id="adminBlockedCount">0</b></div>
+          </div>
+
+          <article class="panel">
+            <div class="table-wrap"><table>
+              <thead><tr><th>Пользователь</th><th>Email</th><th>Статус</th><th>Создан</th><th>Последний вход</th><th></th></tr></thead>
+              <tbody id="usersBody"></tbody>
+            </table></div>
+          </article>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div id="modal" class="modal hidden">
+    <div class="modal-card">
+      <button id="modalClose" class="modal-close">×</button>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <script src="users.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
