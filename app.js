@@ -574,7 +574,7 @@ function deleteCard(id){
 function openCardModal(id=null){
   const d=data(), c=id?d.cards.find(x=>String(x.id)===String(id)):null;
   const v=c||{system:"",owner:"",bank:"Monobank",card:"",expiry:"",iban:"",phone:"",currency:"UAH",dayLimit:0,min:0,max:0,maxPayments:0,mileage:0,active:false};
-  openModal(`<h3>${c?"Редактировать реквизиты":"Добавить реквизиты"}</h3><div class="sub">Данные будут доступны только в кабинете этого пользователя.</div>
+  openModal(`<h3>${c?"Редактировать реквизиты":"Добавить реквизиты"}</h3><div class="sub"></div>
     <form id="cardForm" class="modal-form">
       <label><span>Название в системе</span><input id="cfSystem" value="${v.system}" required></label>
       <label><span>Имя владельца</span><input id="cfOwner" value="${v.owner}" required></label>
