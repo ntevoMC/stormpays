@@ -858,7 +858,7 @@ function openTradeModal(type,id){
   const confirm=(type==="sales" && x.status==="new")
     ? `<button type="button" class="btn primary" id="modalConfirmSale">Подтвердить платёж</button>`
     : "";
-  openModal(`<h3>${x.id}</h3><div class="sub">${type==="sales"?"PayIn":"PayOut"} операция · только просмотр</div>
+  openModal(`<h3>${x.id}</h3><div class="sub">${type==="sales"?"PayIn":"PayOut"}</div>
     <div class="readonly-settings">
       <article class="readonly-setting"><span>Сумма</span><strong>${uah(x.amount)} <small class="usdt-equivalent">≈ ${usdt(Number(x.usdtAmount||orderUsdt(x)))}</small></strong></article>
       <article class="readonly-setting"><span>Статус</span><strong>${status(x.status)}</strong></article>
