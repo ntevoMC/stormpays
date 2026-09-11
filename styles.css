@@ -895,3 +895,37 @@ body.light .notifications-dropdown{
 .strom-bolt{
   fill:#fff;
 }
+
+
+/* Unified sidebar icon set */
+.nav-item{
+  gap:10px;
+}
+.nav-item .nav-icon{
+  width:20px;
+  min-width:20px;
+  height:20px;
+  display:grid;
+  place-items:center;
+  color:#737b91;
+}
+.nav-item .nav-icon svg{
+  width:18px;
+  height:18px;
+  display:block;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.75;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.nav-item .nav-label{
+  width:auto;
+  color:inherit;
+}
+.nav-item:hover .nav-icon{
+  color:#a4abc0;
+}
+.nav-item.active .nav-icon{
+  color:#a49bff;
+}
