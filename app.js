@@ -873,7 +873,7 @@ function renderDeposits(){
   const d=data(); $("#depositsBody").innerHTML=d.deposits.length?d.deposits.map(x=>`<tr><td><strong>${x.id}</strong></td><td>${x.date}</td><td>${x.network}</td><td>${usdt(x.amount)}</td><td>${usdt(x.fee||0)}</td><td>${status(x.status)}</td></tr>`).join(""):`<tr><td colspan="6">Запросов на пополнение нет.</td></tr>`;
 }
 function depositModal(){
-  openModal(`<h3>Пополнение USDT</h3><div class="sub">Локальная демонстрация заявки на депозит.</div>
+  openModal(`<h3>Пополнение USDT</h3><div class="sub"></div>
     <form id="depositForm" class="modal-form">
       <label><span>Сумма USDT</span><input id="depositAmount" type="number" min="1" step=".01" value="0" required></label>
       <label><span>Сеть</span><select id="depositNetwork"><option>TRC20</option></select></label>
