@@ -37,14 +37,14 @@ window.STROMPAYS_USERS = [
 
   {
     id: "usr_1789109999999",
-    name: "test",
-    email: "test@gmail.com",
+    name: "michael",
+    email: "michaelsup8394@gmail.com",
     password: "test123",
     role: "user",
     active: true,
     created: "11.09.2026",
     lastLogin: "—",
-    balance: 50,
+    balance: 200,
     settings: {
       incomingCurrency: "UAH",
       outgoingCurrency: "UAH",
