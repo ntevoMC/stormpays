@@ -65,7 +65,7 @@ window.STROMPAYS_USERS = [
     active: true,
     created: "11.09.2026",
     lastLogin: "—",
-    balance: 200,
+    balance: 0,
     currency: "RUB",
     settings: {
       incomingCurrency: "RUB",
