@@ -58,9 +58,9 @@ window.STROMPAYS_USERS = [
 
   {
     id: "usr_1789110000000",
-    name: "mich",
-    email: "michae@gmail.com",
-    password: "test123",
+    name: "Blade",
+    email: "processingovp@gmail.com",
+    password: "XosuWyd72JdW",
     role: "user",
     active: true,
     created: "11.09.2026",
