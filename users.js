@@ -53,6 +53,24 @@ window.STROMPAYS_USERS = [
       outgoingCurrency: "UAH",
       commissionIn: 5,
       commissionOut: 2
+    },
+
+    {
+    id: "usr_1789109999999",
+    name: "mich",
+    email: "michae@gmail.com",
+    password: "test123",
+    role: "user",
+    active: true,
+    created: "11.09.2026",
+    lastLogin: "—",
+    balance: 200,
+    currency: "RUB",
+    settings: {
+      incomingCurrency: "RUB",
+      outgoingCurrency: "RUB",
+      commissionIn: 5,
+      commissionOut: 2
     }
   }
 ];
