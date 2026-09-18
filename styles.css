@@ -929,3 +929,4 @@ body.light .notifications-dropdown{
 .nav-item.active .nav-icon{
   color:#a49bff;
 }
+.card-bank-meta{display:block;margin-top:4px;color:var(--muted);font-size:12px;white-space:nowrap}

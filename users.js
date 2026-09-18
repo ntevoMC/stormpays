@@ -9,6 +9,7 @@ window.STROMPAYS_USERS = [
     created: "11.09.2026",
     lastLogin: "—",
     balance: 0,
+    currency: "UAH",
     settings: {
       incomingCurrency: "UAH",
       outgoingCurrency: "UAH",
@@ -27,6 +28,7 @@ window.STROMPAYS_USERS = [
     created: "11.09.2026",
     lastLogin: "—",
     balance: 20,
+    currency: "UAH",
     settings: {
       incomingCurrency: "UAH",
       outgoingCurrency: "UAH",
@@ -45,6 +47,7 @@ window.STROMPAYS_USERS = [
     created: "11.09.2026",
     lastLogin: "—",
     balance: 200,
+    currency: "UAH",
     settings: {
       incomingCurrency: "UAH",
       outgoingCurrency: "UAH",

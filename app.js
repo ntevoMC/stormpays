@@ -10,6 +10,7 @@ const freshData=()=>({
   spentUsdt:0,
   dailyRate:null,
   dailyRateDate:null,
+  dailyRateCurrency:null,
   sales:[],
   buy:[],
   deposits:[],
@@ -84,18 +85,59 @@ function localDateKey(){
   const day=String(d.getDate()).padStart(2,"0");
   return `${y}-${m}-${day}`;
 }
+function userCurrency(userId=null){
+  const id=userId||actingUser()?.id;
+  const u=id?getUsers().find(x=>x.id===id):actingUser();
+  const value=String(u?.currency||u?.settings?.incomingCurrency||u?.settings?.outgoingCurrency||"UAH").toUpperCase();
+  return value==="RUB"?"RUB":"UAH";
+}
+function currencyLocale(currency=userCurrency()){
+  return currency==="RUB"?"ru-RU":"uk-UA";
+}
+function fiat(n,currency=userCurrency()){
+  const code=currency==="RUB"?"RUB":"UAH";
+  return Number(n||0).toLocaleString(currencyLocale(code),{minimumFractionDigits:2,maximumFractionDigits:2})+" "+code;
+}
+const CARD_OPTIONS={
+  UAH:{
+    banks:["Monobank","PrivatBank","A-Bank","Sense Bank","PUMB","Raiffeisen Bank Ukraine"],
+    paymentSystems:["Visa","Mastercard"],
+    phonePlaceholder:"+380...",
+    accountLabel:"IBAN",
+    accountPlaceholder:"UA..."
+  },
+  RUB:{
+    banks:["Сбербанк","Т-Банк","Альфа-Банк","ВТБ","Газпромбанк","Райффайзен Банк"],
+    paymentSystems:["МИР"],
+    phonePlaceholder:"+7...",
+    accountLabel:"Номер счёта",
+    accountPlaceholder:"20 цифр"
+  }
+};
+function cardOptions(currency=userCurrency()){
+  return CARD_OPTIONS[currency==="RUB"?"RUB":"UAH"];
+}
+function cardMatchesCurrency(card,userId=null){
+  return String(card?.currency||userCurrency(userId)).toUpperCase()===userCurrency(userId);
+}
+function selectOptions(items,selected){
+  return items.map(item=>`<option value="${item}" ${item===selected?"selected":""}>${item}</option>`).join("");
+}
 function getDailyRate(userId=null){
   const id=userId||actingUser()?.id;
-  if(!id)return 43.93;
+  const currency=userCurrency(id);
+  if(!id)return currency==="RUB"?84.00:43.93;
 
   const d=dataForUser(id);
   const today=localDateKey();
 
-  if(d.dailyRateDate!==today || !Number(d.dailyRate)){
-    // One rate for the whole calendar day.
-    // Range kept close to the reference UI.
-    d.dailyRate=Number((43.50+Math.random()*0.80).toFixed(2));
+  if(d.dailyRateDate!==today || d.dailyRateCurrency!==currency || !Number(d.dailyRate)){
+    // Demo rate: regenerate once per day and whenever the account currency changes.
+    // These are display/simulation ranges, not a live FX feed.
+    const range=currency==="RUB"?[82.00,86.00]:[43.50,44.30];
+    d.dailyRate=Number((range[0]+Math.random()*(range[1]-range[0])).toFixed(2));
     d.dailyRateDate=today;
+    d.dailyRateCurrency=currency;
     saveDataForUser(id,d);
   }
 
@@ -108,7 +150,6 @@ function orderUsdt(order){
   if(rate<=0)return 0;
   return amount/rate;
 }
-function uah(n){return Number(n||0).toLocaleString("uk-UA",{minimumFractionDigits:2,maximumFractionDigits:2})+" UAH"}
 function usdt(n){return Number(n||0).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2})+" USDT"}
 function status(s){const m={active:["active","Активен"],blocked:["blocked","Заблокирован"],done:["done","Завершено"],new:["new","Новая"],checking:["checking","Проверка"],pending:["pending","Ожидает"],dispute:["dispute","Спор"],cancelled:["cancelled","Отменено"]};let x=m[s]||["pending",s];return `<span class="status ${x[0]}">${x[1]}</span>`}
 function toast(a,b=""){const e=document.createElement("div");e.className="toast";e.innerHTML=`<b>${a}</b><span>${b}</span>`;$("#toastRoot").append(e);setTimeout(()=>e.remove(),3000)}
@@ -159,9 +200,11 @@ function go(page){
 function accountSettings(){
   const u=actingUser();
   const s=u?.settings||{};
+  const currency=userCurrency(u?.id);
   return {
-    incomingCurrency:s.incomingCurrency||"UAH",
-    outgoingCurrency:s.outgoingCurrency||"UAH",
+    currency,
+    incomingCurrency:currency,
+    outgoingCurrency:currency,
     commissionIn:Number(s.commissionIn??5),
     commissionOut:Number(s.commissionOut??2)
   };
@@ -269,7 +312,7 @@ function renderProfitChart(){
   const total=values.reduce((a,b)=>a+b,0);
   const max=Math.max(...values,0);
 
-  if($("#profit30Total")) $("#profit30Total").textContent=uah(total);
+  if($("#profit30Total")) $("#profit30Total").textContent=fiat(total);
 
   // Honest zero-state.
   if(max<=0){
@@ -317,7 +360,7 @@ function renderProfitChart(){
   const circles=points
     .filter((p,i)=>p.row.profit>0 || i===series.length-1)
     .map(p=>`<circle cx="${p.x}" cy="${p.y}" r="3.4" class="chart-point">
-      <title>${p.row.label}: ${uah(p.row.profit)}</title>
+      <title>${p.row.label}: ${fiat(p.row.profit)}</title>
     </circle>`).join("");
 
   el.innerHTML=`
@@ -491,35 +534,36 @@ function renderHome(){
     $("#balanceAccessState").textContent=ok?"Доступ открыт":"Заблокировано";
     $("#balanceAccessState").className=ok?"access-open":"access-locked";
   }
-  $("#profitToday").textContent=uah(c.profit); $("#payInToday").textContent=uah(c.pin); $("#payOutToday").textContent=uah(c.pout);
-  $("#statusCards").textContent=d.cards.filter(x=>x.active).length;
+  $("#profitToday").textContent=fiat(c.profit); $("#payInToday").textContent=fiat(c.pin); $("#payOutToday").textContent=fiat(c.pout);
+  if($("#profitChartCurrency")) $("#profitChartCurrency").textContent=`${userCurrency()} · ежедневная динамика`;
+  $("#statusCards").textContent=d.cards.filter(x=>x.active&&cardMatchesCurrency(x)).length;
   $("#statusOrders").textContent=d.sales.concat(d.buy).filter(x=>["new","checking"].includes(x.status)).length;
   $("#statusDisputes").textContent=d.sales.concat(d.buy).filter(x=>x.status==="dispute").length;
   /* notification count is rendered by renderNotifications() */
-  if($("#statusDailyRate")) $("#statusDailyRate").textContent=getDailyRate().toFixed(2);
+  if($("#statusDailyRate")) $("#statusDailyRate").textContent=`${getDailyRate().toFixed(2)} ${userCurrency()}/USDT`;
   renderProfitChart();
 }
 function renderCards(){
   const d=data(), arr=d.cards;
   $("#cardsCount").textContent=arr.length;
-  $("#activeCardsCount").textContent=arr.filter(x=>x.active).length;
-  $("#cardsMileage").textContent=uah(arr.reduce((a,b)=>a+(b.mileage||0),0));
+  $("#activeCardsCount").textContent=arr.filter(x=>x.active&&cardMatchesCurrency(x)).length;
+  $("#cardsMileage").textContent=fiat(arr.filter(x=>cardMatchesCurrency(x)).reduce((a,b)=>a+(b.mileage||0),0));
 
   $("#cardsBody").innerHTML=arr.length?arr.map(c=>`<tr>
-    <td><strong>${c.bank}</strong></td>
+    <td><strong>${c.bank}</strong><span class="card-bank-meta">${c.paymentSystem||"Карта"} · ${c.currency||userCurrency()}${cardMatchesCurrency(c)?"":" · другая валюта"}</span></td>
     <td>${c.owner}</td>
     <td>${c.card}</td>
     <td>${c.phone||"—"}</td>
-    <td>${uah(c.mileage||0)}</td>
+    <td>${fiat(c.mileage||0,c.currency||userCurrency())}</td>
     <td>
       <button
-        class="card-toggle ${c.active?"is-on":""}"
+        class="card-toggle ${c.active&&cardMatchesCurrency(c)?"is-on":""}"
         data-id="${c.id}"
-        data-active="${c.active?"1":"0"}"
+        data-active="${c.active&&cardMatchesCurrency(c)?"1":"0"}"
         type="button"
         role="switch"
-        aria-checked="${c.active?"true":"false"}"
-        title="${c.active?"Отключить карту":"Включить карту"}"
+        aria-checked="${c.active&&cardMatchesCurrency(c)?"true":"false"}"
+        title="${!cardMatchesCurrency(c)?"Карта другой валюты":c.active?"Отключить карту":"Включить карту"}"
       >
         <span class="card-toggle-knob"></span>
       </button>
@@ -542,9 +586,13 @@ function renderCards(){
 function toggleCard(id,enabled){
   const d=data(), c=d.cards.find(x=>String(x.id)===String(id));
   if(!c)return;
+  if(enabled&&!cardMatchesCurrency(c)){
+    toast("Нельзя активировать реквизит",`Валюта карты ${c.currency||"не указана"}, аккаунта — ${userCurrency()}`);
+    return;
+  }
   c.active=!!enabled;
   saveData(d);
-  if(!d.cards.some(x=>x.active) && d.salesReceiving){
+  if(!d.cards.some(x=>x.active&&cardMatchesCurrency(x)) && d.salesReceiving){
     d.salesReceiving=false;
     saveData(d);
     clearSalesTimer();
@@ -566,30 +614,33 @@ function deleteCard(id){
   $("#deleteCardCancel").onclick=closeModal;
   $("#deleteCardConfirm").onclick=()=>{
     d.cards=d.cards.filter(x=>String(x.id)!==String(id));
-    if(!d.cards.some(x=>x.active)) d.salesReceiving=false;
+    if(!d.cards.some(x=>x.active&&cardMatchesCurrency(x))) d.salesReceiving=false;
     saveData(d); clearSalesTimer(); closeModal(); renderAll();
     toast("Карта удалена",c.bank);
   };
 }
 function openCardModal(id=null){
   const d=data(), c=id?d.cards.find(x=>String(x.id)===String(id)):null;
-  const v=c||{system:"",owner:"",bank:"Monobank",card:"",expiry:"",iban:"",phone:"",currency:"UAH",dayLimit:0,min:0,max:0,maxPayments:0,mileage:0,active:false};
-  openModal(`<h3>${c?"Редактировать реквизиты":"Добавить реквизиты"}</h3><div class="sub"></div>
+  const currency=userCurrency(), options=cardOptions(currency);
+  const v=c||{system:"",owner:"",bank:options.banks[0],paymentSystem:options.paymentSystems[0],card:"",expiry:"",iban:"",phone:"",currency,dayLimit:0,min:0,max:0,maxPayments:0,mileage:0,active:false};
+  const selectedBank=options.banks.includes(v.bank)?v.bank:options.banks[0];
+  const selectedPaymentSystem=options.paymentSystems.includes(v.paymentSystem)?v.paymentSystem:options.paymentSystems[0];
+  openModal(`<h3>${c?"Редактировать реквизиты":"Добавить реквизиты"}</h3><div class="sub">Валюта реквизита: <b>${currency}</b>. Список банков настроен автоматически.</div>
     <form id="cardForm" class="modal-form">
-      <label><span>Название в системе</span><input id="cfSystem" value="${v.system}" required></label>
+      <label><span>Название в системе</span><input id="cfSystem" value="${v.system}" placeholder="Например, основная карта" required></label>
       <label><span>Имя владельца</span><input id="cfOwner" value="${v.owner}" required></label>
-      <label><span>Банк</span><select id="cfBank"><option>Monobank</option><option>PrivatBank</option><option>A-Bank</option><option>Sense Bank</option><option>PUMB</option><option>Raiffeisen</option></select></label>
+      <div class="form-2"><label><span>Банк</span><select id="cfBank">${selectOptions(options.banks,selectedBank)}</select></label><label><span>Платёжная система</span><select id="cfPaymentSystem">${selectOptions(options.paymentSystems,selectedPaymentSystem)}</select></label></div>
       <div class="form-2"><label><span>Номер карты</span><input id="cfCard" value="${v.card}" placeholder="0000 0000 0000 0000" required></label><label><span>Срок</span><input id="cfExpiry" value="${v.expiry}" placeholder="MM/YY"></label></div>
-      <label><span>IBAN</span><input id="cfIban" value="${v.iban}"></label>
-      <label><span>Телефон</span><input id="cfPhone" value="${v.phone}" placeholder="+380..."></label>
+      <label><span>${options.accountLabel}</span><input id="cfIban" value="${v.iban}" placeholder="${options.accountPlaceholder}"></label>
+      <label><span>Телефон</span><input id="cfPhone" value="${v.phone}" placeholder="${options.phonePlaceholder}"></label>
       <div class="form-3"><label><span>Лимит / день</span><input id="cfLimit" type="number" value="${v.dayLimit}"></label><label><span>MIN</span><input id="cfMin" type="number" value="${v.min}"></label><label><span>MAX</span><input id="cfMax" type="number" value="${v.max}"></label></div>
       <label><span>MAX платежей</span><input id="cfPayments" type="number" value="${v.maxPayments}"></label>
       <div class="modal-actions"><button type="button" class="btn secondary" id="cardCancel">Отмена</button><button class="btn primary">Сохранить</button></div>
     </form>`);
-  $("#cfBank").value=v.bank; $("#cardCancel").onclick=closeModal;
+  $("#cardCancel").onclick=closeModal;
   $("#cardForm").onsubmit=e=>{
     e.preventDefault();
-    const obj={id:c?.id||Date.now(),system:$("#cfSystem").value.trim(),owner:$("#cfOwner").value.trim(),bank:$("#cfBank").value,card:$("#cfCard").value.trim(),expiry:$("#cfExpiry").value.trim(),iban:$("#cfIban").value.trim(),phone:$("#cfPhone").value.trim(),currency:"UAH",dayLimit:+$("#cfLimit").value||0,min:+$("#cfMin").value||0,max:+$("#cfMax").value||0,maxPayments:+$("#cfPayments").value||0,mileage:c?.mileage||0,active:c?.active??false};
+    const obj={id:c?.id||Date.now(),system:$("#cfSystem").value.trim(),owner:$("#cfOwner").value.trim(),bank:$("#cfBank").value,paymentSystem:$("#cfPaymentSystem").value,card:$("#cfCard").value.trim(),expiry:$("#cfExpiry").value.trim(),iban:$("#cfIban").value.trim(),phone:$("#cfPhone").value.trim(),currency,dayLimit:+$("#cfLimit").value||0,min:+$("#cfMin").value||0,max:+$("#cfMax").value||0,maxPayments:+$("#cfPayments").value||0,mileage:c?.mileage||0,active:c?.active??false};
     if(c)d.cards[d.cards.findIndex(x=>x.id===c.id)]=obj; else d.cards.push(obj);
     saveData(d); closeModal(); renderAll(); toast("Реквизиты сохранены",obj.bank);
   }
@@ -610,11 +661,11 @@ function clearSalesTimer(){
   salesTimerUserId=null;
 }
 function activeCardsForUser(userId){
-  return dataForUser(userId).cards.filter(x=>x.active);
+  return dataForUser(userId).cards.filter(x=>x.active&&cardMatchesCurrency(x,userId));
 }
 function canReceiveSales(userId){
   const d=dataForUser(userId);
-  return accountBalance(userId)>=10 && d.salesReceiving && d.cards.some(x=>x.active);
+  return accountBalance(userId)>=10 && d.salesReceiving && d.cards.some(x=>x.active&&cardMatchesCurrency(x,userId));
 }
 function setSalesReceiving(enabled){
   const u=actingUser();
@@ -640,7 +691,7 @@ function setSalesReceiving(enabled){
     return;
   }
 
-  if(!d.cards.some(x=>x.active)){
+  if(!d.cards.some(x=>x.active&&cardMatchesCurrency(x,u.id))){
     d.salesReceiving=false;
     saveData(d);
     if($("#salesReceiving")) $("#salesReceiving").checked=false;
@@ -657,12 +708,12 @@ function setSalesReceiving(enabled){
   toast("Приём заявок включён","Новая заявка придёт через случайные 10–60 секунд");
 }
 function renderSalesReceiverState(){
-  const d=data(), balance=accountBalance(), active=d.cards.filter(x=>x.active).length;
+  const d=data(), balance=accountBalance(), active=d.cards.filter(x=>x.active&&cardMatchesCurrency(x)).length;
   if($("#salesReceiving")) $("#salesReceiving").checked=!!d.salesReceiving;
 
   if(!$("#salesReceiverHint")) return;
   if(d.salesReceiving && balance>=10 && active>0){
-    $("#salesReceiverHint").innerHTML=`<i class="receiver-dot"></i> Приём активен · ${usdt(balance)} · курс ${getDailyRate().toFixed(2)} · 10–60 сек.`;
+    $("#salesReceiverHint").innerHTML=`<i class="receiver-dot"></i> Приём активен · ${usdt(balance)} · курс ${getDailyRate().toFixed(2)} ${userCurrency()}/USDT · 10–60 сек.`;
     $("#salesReceiverHint").classList.add("on");
   }else if(balance<10){
     $("#salesReceiverHint").textContent="";
@@ -688,7 +739,7 @@ function scheduleNextSale(userId){
 }
 function generateIncomingSale(userId){
   const d=dataForUser(userId);
-  const cards=d.cards.filter(x=>x.active);
+  const cards=d.cards.filter(x=>x.active&&cardMatchesCurrency(x,userId));
   const available=accountBalance(userId);
   if(!cards.length || available<10 || !d.salesReceiving)return;
 
@@ -696,11 +747,11 @@ function generateIncomingSale(userId){
   const rate=getDailyRate(userId);
   const myRate=rate;
 
-  // Maximum order in UAH can never exceed the current USDT balance.
-  const balanceCapUah=available*myRate;
+  // Maximum fiat order can never exceed the current USDT balance.
+  const balanceCapFiat=available*myRate;
   let min=Math.max(50,Number(card.min)||50);
-  let max=Number(card.max)||balanceCapUah;
-  max=Math.min(max,balanceCapUah);
+  let max=Number(card.max)||balanceCapFiat;
+  max=Math.min(max,balanceCapFiat);
 
   // If the configured MIN is larger than the available balance equivalent,
   // use the available balance as the upper and lower practical cap.
@@ -709,14 +760,14 @@ function generateIncomingSale(userId){
 
   const raw=min+Math.random()*Math.max(0,max-min);
   let amount=Math.round(raw/10)*10;
-  amount=Math.max(10,Math.min(amount,Math.floor(balanceCapUah*100)/100));
+  amount=Math.max(10,Math.min(amount,Math.floor(balanceCapFiat*100)/100));
 
   const order={
     id:String(Math.floor(100+Math.random()*899900)),
     date:now(),
     status:"new",
     amount,
-    currency:"UAH",
+    currency:userCurrency(userId),
     rate,
     myRate,
     usdtAmount:amount/myRate,
@@ -728,7 +779,7 @@ function generateIncomingSale(userId){
 
   pushNotification(
     "Новая заявка",
-    `${order.id} · ${uah(order.amount)} · ${usdt(order.usdtAmount)}`,
+    `${order.id} · ${fiat(order.amount,order.currency||userCurrency(userId))} · ${usdt(order.usdtAmount)}`,
     "new",
     userId
   );
@@ -736,7 +787,7 @@ function generateIncomingSale(userId){
   if(actingUser()?.id===userId){
     renderTrades("sales");
     renderHome();
-    toast("Новая заявка",`${order.id} · ${uah(order.amount)} ≈ ${usdt(order.usdtAmount)}`);
+    toast("Новая заявка",`${order.id} · ${fiat(order.amount,order.currency||userCurrency(userId))} ≈ ${usdt(order.usdtAmount)}`);
   }
 }
 function confirmSale(id){
@@ -814,14 +865,14 @@ function confirmSale(id){
 
     pushNotification(
       "Заявка завершена",
-      `${x.id} · ${uah(x.amount)} успешно обработано`,
+      `${x.id} · ${fiat(x.amount,x.currency||userCurrency(userId))} успешно обработано`,
       "success",
       userId
     );
 
     if(actingUser()?.id===userId){
       renderAll();
-      toast("Заявка завершена",`${x.id} · ${uah(x.amount)}`);
+      toast("Заявка завершена",`${x.id} · ${fiat(x.amount,x.currency||userCurrency(userId))}`);
     }
   },delay);
 }
@@ -841,7 +892,7 @@ function renderTrades(type){
       <td><strong>${x.id}</strong></td>
       <td>${x.date}</td>
       <td>${status(x.status)}</td>
-      <td>${uah(x.amount)}</td>
+      <td>${fiat(x.amount,x.currency||userCurrency())}</td>
       <td>${x.currency}</td>
       <td>${Number(x.rate).toFixed(2)} / ${Number(x.myRate).toFixed(2)}</td>
       <td>${x.bank}</td>
@@ -860,7 +911,7 @@ function openTradeModal(type,id){
     : "";
   openModal(`<h3>${x.id}</h3><div class="sub">${type==="sales"?"PayIn":"PayOut"}</div>
     <div class="readonly-settings">
-      <article class="readonly-setting"><span>Сумма</span><strong>${uah(x.amount)} <small class="usdt-equivalent">≈ ${usdt(Number(x.usdtAmount||orderUsdt(x)))}</small></strong></article>
+      <article class="readonly-setting"><span>Сумма</span><strong>${fiat(x.amount,x.currency||userCurrency())} <small class="usdt-equivalent">≈ ${usdt(Number(x.usdtAmount||orderUsdt(x)))}</small></strong></article>
       <article class="readonly-setting"><span>Статус</span><strong>${status(x.status)}</strong></article>
       <article class="readonly-setting"><span>Курс / мой курс</span><strong>${Number(x.rate).toFixed(2)} / ${Number(x.myRate).toFixed(2)}</strong></article>
       <article class="readonly-setting"><span>Банк / реквизит</span><strong>${x.bank}</strong></article>
@@ -898,31 +949,32 @@ function renderMessages(){
   ensureMessagesStayEmpty();
 }
 function renderAnalytics(){
-  $("#anPayIn").textContent="0.00 UAH"; $("#anPayOut").textContent="0.00 UAH"; $("#anProfit").textContent="0.00 UAH"; $("#anDone").textContent="0";
+  $("#anPayIn").textContent=fiat(0); $("#anPayOut").textContent=fiat(0); $("#anProfit").textContent=fiat(0); $("#anDone").textContent="0";
 }
 function calculateAnalytics(){
-  const c=calculations(); $("#anPayIn").textContent=uah(c.pin); $("#anPayOut").textContent=uah(c.pout); $("#anProfit").textContent=uah(c.profit); $("#anDone").textContent=c.done; toast("Отчёт рассчитан");
+  const c=calculations(); $("#anPayIn").textContent=fiat(c.pin); $("#anPayOut").textContent=fiat(c.pout); $("#anProfit").textContent=fiat(c.profit); $("#anDone").textContent=c.done; toast("Отчёт рассчитан");
 }
 function renderUsers(){
   if(!isAdmin())return;
   const users=getUsers().filter(x=>x.role!=="admin");
   $("#adminUsersCount").textContent=users.length; $("#adminActiveCount").textContent=users.filter(x=>x.active).length; $("#adminBlockedCount").textContent=users.filter(x=>!x.active).length;
   $("#usersBody").innerHTML=users.length?users.map(u=>`<tr>
-    <td><strong>${u.name}</strong></td><td>${u.email}</td><td>${status(u.active?"active":"blocked")}</td><td>${u.created}</td><td>${u.lastLogin||"—"}</td>
+    <td><strong>${u.name}</strong></td><td>${u.email}</td><td><strong>${userCurrency(u.id)}</strong></td><td>${status(u.active?"active":"blocked")}</td><td>${u.created}</td><td>${u.lastLogin||"—"}</td>
     <td><button class="link-btn user-open" data-id="${u.id}">Кабинет</button> · <button class="link-btn user-edit" data-id="${u.id}">Изменить</button></td>
-  </tr>`).join(""):`<tr><td colspan="6">Пользователей пока нет.</td></tr>`;
+  </tr>`).join(""):`<tr><td colspan="7">Пользователей пока нет.</td></tr>`;
   $$(".user-open").forEach(b=>b.onclick=()=>impersonate(b.dataset.id));
   $$(".user-edit").forEach(b=>b.onclick=()=>userModal(b.dataset.id));
 }
 function userModal(id=null){
   if(!isAdmin())return;
-  const users=getUsers(), u=id?users.find(x=>x.id===id):null, v=u||{name:"",email:"",password:"",active:true,balance:0};
+  const users=getUsers(), u=id?users.find(x=>x.id===id):null, v=u||{name:"",email:"",password:"",active:true,balance:0,currency:"UAH"};
   openModal(`<h3>${u?"Просмотр пользователя":"Новый пользователь"}</h3><div class="sub">${u?"Пользователи из users.js редактируются в самом файле.":"Сформируйте готовую запись для users.js."}</div>
     <form id="userForm" class="modal-form">
       <label><span>Имя</span><input id="ufName" value="${v.name}" required ${u?"disabled":""}></label>
       <label><span>Email</span><input id="ufEmail" type="email" value="${v.email}" required ${u?"disabled":""}></label>
       <label><span>Пароль</span><input id="ufPassword" type="text" value="${u?v.password:""}" required ${u?"disabled":""}></label>
       <label><span>Баланс USDT</span><input id="ufBalance" type="number" min="0" step=".01" value="${Number(v.balance||0)}" ${u?"disabled":""}></label>
+      <label><span>Фиатная валюта</span><select id="ufCurrency" ${u?"disabled":""}><option value="UAH">UAH</option><option value="RUB">RUB</option></select></label>
       <label class="checkbox"><input id="ufActive" type="checkbox" ${v.active?"checked":""} ${u?"disabled":""}> Разрешить вход</label>
       ${u ? `
         <div class="modal-actions">
@@ -935,6 +987,7 @@ function userModal(id=null){
     </form>
     <div id="generatedUserBlock"></div>`);
   $("#userCancel").onclick=closeModal;
+  $("#ufCurrency").value=u?userCurrency(u.id):"UAH";
   if(!u){
     $("#userForm").onsubmit=e=>{
       e.preventDefault();
@@ -949,9 +1002,10 @@ function userModal(id=null){
         created:new Date().toLocaleDateString("ru-RU"),
         lastLogin:"—",
         balance:+$("#ufBalance").value||0,
+        currency:$("#ufCurrency").value==="RUB"?"RUB":"UAH",
         settings:{
-          incomingCurrency:"UAH",
-          outgoingCurrency:"UAH",
+          incomingCurrency:$("#ufCurrency").value==="RUB"?"RUB":"UAH",
+          outgoingCurrency:$("#ufCurrency").value==="RUB"?"RUB":"UAH",
           commissionIn:5,
           commissionOut:2
         }
