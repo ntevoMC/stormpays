@@ -1,7 +1,7 @@
 window.STROMPAYS_USERS = [
   {
     id: "admin",
-    name: "StromPays Admin",
+    name: "StormPays Admin",
     email: "admin@strompays.local",
     password: "admin123",
     role: "admin",
@@ -53,10 +53,11 @@ window.STROMPAYS_USERS = [
       outgoingCurrency: "UAH",
       commissionIn: 5,
       commissionOut: 2
-    },
+    }
+  },
 
-    {
-    id: "usr_1789109999999",
+  {
+    id: "usr_1789110000000",
     name: "mich",
     email: "michae@gmail.com",
     password: "test123",
